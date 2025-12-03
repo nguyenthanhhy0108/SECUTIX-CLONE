@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{app.title}">FIFA Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top, #0b1120, #020617);
+            color: #0f172a;
+        }
+
+        .page {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .stadium-side {
+            flex: 0 0 70%;
+            position: relative;
+            background-image: url("https://images.pexels.com/photos/399187/pexels-photo-399187.jpeg?auto=compress&cs=tinysrgb&w=1920");
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+        }
+
+        .stadium-overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(56,189,248,0.55), transparent 55%),
+            radial-gradient(circle at bottom, rgba(34,197,94,0.45), transparent 60%),
+            linear-gradient(to bottom right, rgba(15,23,42,0.85), rgba(15,23,42,0.9));
+            mix-blend-mode: soft-light;
+        }
+
+        .stadium-content {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            padding: 32px 42px;
+            color: #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .stadium-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(15,23,42,0.85);
+            border: 1px solid rgba(148,163,184,0.7);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+        }
+
+        .stadium-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 0%, #22c55e, #15803d);
+            box-shadow: 0 0 0 4px rgba(34,197,94,0.35);
+        }
+
+        .stadium-title {
+            margin-top: 42px;
+        }
+
+        .stadium-title h1 {
+            font-size: clamp(36px, 3.2vw, 44px);
+            line-height: 1.1;
+            font-weight: 700;
+        }
+
+        .stadium-title h1 span {
+            color: #a5b4fc;
+        }
+
+        .stadium-title p {
+            margin-top: 10px;
+            font-size: 15px;
+            color: #cbd5f5;
+            max-width: 320px;
+        }
+
+        .stadium-metrics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .metric-card {
+            min-width: 120px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(15,23,42,0.88);
+            border: 1px solid rgba(148,163,184,0.5);
+        }
+
+        .metric-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .stadium-footer {
+            font-size: 12px;
+            color: #9ca3af;
+            max-width: 360px;
+        }
+
+        /* Right side: form */
+
+        .form-side {
+            flex: 0 0 30%;
+            background: #f9fafb;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 28px;
+            position: relative;
+            font-size: 18px; /* base font size for login panel - optimized for readability */
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            background: conic-gradient(from 160deg, #22c55e, #22c55e, #22c55e, #22c55e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 24px rgba(22,163,74,0.65);
+        }
+
+        .brand-logo-inner {
+            width: 20px;
+            height: 20px;
+            border-radius: inherit;
+            background: radial-gradient(circle at 30% 0%, #bbf7d0, #22c55e);
+            border: 2px solid rgba(15,23,42,0.2);
+        }
+
+        .brand-text-main {
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            font-size: 0.95em;
+        }
+
+        .brand-text-sub {
+            font-size: 0.75em;
+            color: #6b7280;
+        }
+
+        .language-dropdown {
+            position: relative;
+        }
+
+        .language-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            font-size: 0.85em;
+            cursor: pointer;
+            min-width: 96px;
+            justify-content: space-between;
+        }
+
+        .language-menu {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 4px);
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 16px 30px rgba(15,23,42,0.12);
+            padding: 4px;
+            display: none;
+            z-index: 10;
+        }
+
+        .language-menu.open {
+            display: block;
+        }
+
+        .language-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            color: #374151;
+            text-decoration: none;
+        }
+
+        .language-item:hover {
+            background: #f3f4f6;
+        }
+
+        .language-item.active {
+            background: #e0f2fe;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .content {
+            max-width: 360px;
+            margin: 0 auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 22px;
+        }
+
+        .heading h2 {
+            font-size: 1.75em;
+            margin-bottom: 8px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .heading p {
+            font-size: 0.95em;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        form {
+            margin-top: 10px;
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+            color: #111827;
+            font-weight: 500;
+        }
+
+        .input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            font-size: 1em;
+            outline: none;
+            background: #f9fafb;
+            line-height: 1.5;
+        }
+
+        .input:focus {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 1px rgba(34,197,94,0.55);
+            background: #ffffff;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .link {
+            font-size: 0.85em;
+            color: #16a34a;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+            margin-bottom: 16px;
+        }
+
+        .checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9em;
+            color: #4b5563;
+            cursor: pointer;
+        }
+
+        .checkbox input {
+            width: 13px;
+            height: 13px;
+            accent-color: #22c55e;
+        }
+
+        .primary-btn {
+            width: 100%;
+            border: none;
+            border-radius: 999px;
+            padding: 14px 20px;
+            background: linear-gradient(120deg, #22c55e, #16a34a);
+            color: #f9fafb;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 14px 26px rgba(22,163,74,0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            line-height: 1.4;
+        }
+
+        .primary-btn:hover {
+            filter: brightness(1.03);
+        }
+
+        .primary-btn:active {
+            box-shadow: 0 10px 18px rgba(22,163,74,0.45);
+        }
+
+        .primary-btn-icon {
+            font-size: 1.1em;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85em;
+            color: #9ca3af;
+            margin: 18px 0 12px;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e5e7eb, transparent);
+        }
+
+        .social-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .social-btn {
+            flex: 1;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            padding: 10px 12px;
+            font-size: 0.85em;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .social-badge {
+            width: 14px;
+            height: 14px;
+            border-radius: 999px;
+        }
+
+        .social-badge.google {
+            background: radial-gradient(circle at 30% 0%, #ffffff, #e5e7eb);
+        }
+
+        .social-badge.facebook {
+            background: radial-gradient(circle at 20% 0%, #bfdbfe, #1d4ed8);
+        }
+
+        .footer {
+            margin-top: 16px;
+            font-size: 0.85em;
+            color: #6b7280;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .footer a {
+            color: #16a34a;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 880px) {
+            .page {
+                flex-direction: column;
+            }
+            .stadium-side {
+                display: none;
+            }
+            .form-side {
+                flex: unset;
+                min-height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <aside class="stadium-side">
+        <div class="stadium-overlay"></div>
+        <div class="stadium-content">
+            <div>
+                <div class="stadium-badge">
+                    <span class="stadium-dot"></span>
+                    <span th:text="#{stadium.badge}">FIFA Online Arena</span>
+                </div>
+                <div class="stadium-title">
+                    <h1>
+                        <span th:text="#{stadium.hero.line1}">Lights on.</span><br/>
+                        <span th:text="#{stadium.hero.line2}">90 minutes to make history.</span>
+                    </h1>
+                    <p th:text="#{stadium.hero.subtitle}">
+                        Step into a sold-out stadium atmosphere. Securely manage your club, squads and
+                        match sessions from any device.
+                    </p>
+                </div>
+                <div class="stadium-metrics">
+                    <div class="metric-card">
+                        <div class="metric-label" th:text="#{stadium.metric.liveMatches}">Live matches</div>
+                        <div class="metric-value">24,381</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label" th:text="#{stadium.metric.peakLatency}">Peak latency</div>
+                        <div class="metric-value">&lt; 80 ms</div>
+                    </div>
+                </div>
+            </div>
+            <p class="stadium-footer" th:text="#{stadium.footer}">
+                All logins are protected with modern encryption and fraud detection to keep your
+                Ultimate Team and club assets safe.
+            </p>
+        </div>
+    </aside>
+
+    <main class="form-side" th:with="langCode=${#locale.language}">
+        <header class="top-bar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <div class="brand-logo-inner"></div>
+                </div>
+                <div>
+                    <div class="brand-text-main">FIFA LOGIN</div>
+                    <div class="brand-text-sub">Match Control Center</div>
+                </div>
+            </div>
+            <div class="language-dropdown" id="langDropdown">
+                <button type="button" class="language-button" id="langButton">
+                    <span th:text="${langCode == 'vi'} ? 'Tiếng Việt' : 'English'">English</span>
+                    <span>▾</span>
+                </button>
+                <div class="language-menu" id="langMenu">
+                    <a class="language-item"
+                       th:classappend="${langCode == 'en'} ? ' active'"
+                       th:href="@{/en/login}">
+                        <span>English</span>
+                    </a>
+                    <a class="language-item"
+                       th:classappend="${langCode == 'vi'} ? ' active'"
+                       th:href="@{/vi/login}">
+                        <span>Tiếng Việt</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <section class="content">
+            <!-- Debug: show current locale in the HTML (hidden from UI) -->
+            <p th:text="${#locale}" style="display:none">en</p>
+            <div class="heading">
+                <h2 th:text="#{app.title}">Welcome back, Manager</h2>
+                <p th:text="#{app.subtitle}">
+                    Sign in to your FIFA control panel to manage squads, tactics and fixtures.
+                </p>
+            </div>
+
+            <form th:action="@{/login}" method="post">
+                <div class="field">
+                    <label for="username" th:text="#{login.username}">Email or username</label>
+                    <input id="username"
+                           class="input"
+                           type="text"
+                           name="username"
+                           autocomplete="username"
+                           th:placeholder="#{login.username}">
+                </div>
+
+                <div class="field">
+                    <div class="field-row">
+                        <label for="password" th:text="#{login.password}">Password</label>
+                        <a href="#" class="link" th:text="#{login.forgotPassword}">Forgot password?</a>
+                    </div>
+                    <input id="password"
+                           class="input"
+                           type="password"
+                           name="password"
+                           autocomplete="current-password"
+                           th:placeholder="#{login.password}">
+                </div>
+
+                <div class="options">
+                    <label class="checkbox">
+                        <input type="checkbox" name="remember-me">
+                        <span th:text="#{login.rememberMe}">Remember me</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="primary-btn">
+                    <span class="primary-btn-icon">⚽</span>
+                    <span th:text="#{login.button}">Enter the stadium</span>
+                </button>
+
+                <div class="divider">
+                    <div class="divider-line"></div>
+                    <span th:text="#{login.or}">Or continue with</span>
+                    <div class="divider-line"></div>
+                </div>
+
+                <div class="social-row">
+                    <button type="button" class="social-btn">
+                        <span class="social-badge google"></span>
+                        <span th:text="#{login.social.google}">Sign in with Google</span>
+                    </button>
+                    <button type="button" class="social-btn">
+                        <span class="social-badge facebook"></span>
+                        <span th:text="#{login.social.facebook}">Sign in with Facebook</span>
+                    </button>
+                </div>
+
+                <div class="footer">
+                    <span th:text="#{login.footer.text}">Don’t have a club profile yet?</span>
+                    &nbsp;
+                    <a href="#" th:text="#{login.footer.action}">Create one</a>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
+<script>
+    (function () {
+        const btn = document.getElementById('langButton');
+        const menu = document.getElementById('langMenu');
+        const dropdown = document.getElementById('langDropdown');
+        if (!btn || !menu || !dropdown) return;
+
+        btn.addEventListener('click', function () {
+            menu.classList.toggle('open');
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!dropdown.contains(e.target)) {
+                menu.classList.remove('open');
+            }
+        });
+    })();
+</script>
+</body>
+</html>
+
+
